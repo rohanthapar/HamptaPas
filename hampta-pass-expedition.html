@@ -321,17 +321,32 @@ section { position: relative; padding: clamp(5rem, 14vh, 9rem) 1.4rem; }
   border: none; background: none; padding: 0;
 }
 #backpack:active { transform: translateX(-50%) scale(0.95); }
-#backpack.wiggle { animation: wiggle 0.5s ease; }
-@keyframes wiggle {
-  0%,100% { transform: translateX(-50%) rotate(0); }
-  25% { transform: translateX(-50%) rotate(-3deg); }
-  75% { transform: translateX(-50%) rotate(3deg); }
+#backpack.wiggle { animation: packPop 0.62s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes packPop {
+  0%   { transform: translateX(-50%) scale(1, 1) rotate(0); }
+  28%  { transform: translateX(-50%) translateY(-8px) scale(1.09, 0.9) rotate(0); }
+  52%  { transform: translateX(-50%) scale(0.95, 1.07) rotate(-2.5deg); }
+  74%  { transform: translateX(-50%) scale(1.03, 0.97) rotate(2.5deg); }
+  100% { transform: translateX(-50%) scale(1, 1) rotate(0); }
+}
+/* Glow burst radiating from the pack as it opens */
+#backpack::after {
+  content: ""; position: absolute; left: 50%; top: 52%; z-index: -1;
+  width: 46px; height: 46px; border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  background: radial-gradient(circle, rgba(125,216,200,0.55), rgba(125,216,200,0) 70%);
+  opacity: 0; pointer-events: none;
+}
+#pack-stage.open #backpack::after { animation: packGlow 0.75s var(--ease-lux); }
+@keyframes packGlow {
+  0%   { opacity: 0.75; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.4); }
 }
 .pack-item {
   position: absolute; left: 50%; bottom: 130px; z-index: 1;
   display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
-  opacity: 0; transform: translate(-50%, 20px) scale(0.4);
-  transition: transform 0.8s var(--ease-lux), opacity 0.5s;
+  opacity: 0; transform: translate(-50%, 34px) scale(0.12) rotate(0deg);
+  transition: transform 0.42s var(--ease-lux), opacity 0.3s ease; /* retract */
   pointer-events: none;
 }
 .pack-item .pi-emoji {
@@ -357,7 +372,24 @@ section { position: relative; padding: clamp(5rem, 14vh, 9rem) 1.4rem; }
   border: 1px solid var(--glass-brd);
   padding: 0.18rem 0.55rem; border-radius: 99px; white-space: nowrap;
 }
-#pack-stage.open .pack-item { opacity: 1; transform: translate(calc(-50% + var(--x)), var(--y)) scale(1) rotate(var(--r, 0deg)); }
+/* Beautiful staggered spring burst when the pack opens */
+#pack-stage.open .pack-item {
+  opacity: 1;
+  transform: translate(calc(-50% + var(--x)), var(--y)) scale(1) rotate(var(--r, 0deg));
+  transition: transform 0.9s cubic-bezier(0.34, 1.7, 0.5, 1), opacity 0.5s ease;
+}
+#pack-stage.open .pack-item:nth-child(1) { transition-delay: 0.04s; }
+#pack-stage.open .pack-item:nth-child(2) { transition-delay: 0.10s; }
+#pack-stage.open .pack-item:nth-child(3) { transition-delay: 0.16s; }
+#pack-stage.open .pack-item:nth-child(4) { transition-delay: 0.22s; }
+#pack-stage.open .pack-item:nth-child(5) { transition-delay: 0.28s; }
+#pack-stage.open .pack-item:nth-child(6) { transition-delay: 0.34s; }
+#pack-stage.open .pack-item:nth-child(7) { transition-delay: 0.40s; }
+#pack-stage.open .pack-item:nth-child(8) { transition-delay: 0.46s; }
+/* Gentle drift once settled — applied to the icon so it never fights the burst transform */
+#pack-stage.open .pack-item .pi-emoji { animation: itemBob 3.6s ease-in-out 0.9s infinite; }
+#pack-stage.open .pack-item:nth-child(even) .pi-emoji { animation-duration: 4.3s; }
+@keyframes itemBob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-7px) rotate(1.5deg); } }
 .pack-hint { text-align: center; color: var(--faint); font-size: 0.8rem; font-family: var(--font-mono); margin-top: 1.2rem; }
 
 /* ---------- Chapter 5: Mountain scene ---------- */
@@ -531,6 +563,96 @@ body::after {
 }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
 
+/* ============================================================
+   PREMIUM ENHANCEMENTS — added micro-interactions & ambience
+   ============================================================ */
+
+/* ---------- Shimmering headline (slow, tasteful shine sweep) ---------- */
+.hero-title {
+  background: linear-gradient(100deg, #ffffff 0%, #ffffff 34%, #cfeee6 47%, #9db2d0 60%, #9db2d0 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  animation: heroFade 1.1s var(--ease-lux) 0.4s backwards, titleShine 8s ease-in-out 1.8s infinite;
+}
+@keyframes titleShine { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+.final-welcome { background-size: 200% 100%; animation: titleShine 7s ease-in-out infinite; }
+
+/* ---------- Cursor spotlight glow on glass cards ---------- */
+.card { position: relative; --mx: 50%; --my: 50%; }
+.card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(230px circle at var(--mx) var(--my), rgba(125,216,200,0.16), transparent 62%);
+  opacity: 0; transition: opacity 0.45s var(--ease-lux); z-index: 1;
+}
+.card:hover::after { opacity: 1; }
+
+/* ---------- Achievement entrance light-sweep ---------- */
+.ach::before {
+  content: ""; position: absolute; top: 0; left: -65%; width: 42%; height: 100%; z-index: 1;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.11), transparent);
+  transform: skewX(-18deg); opacity: 0; pointer-events: none;
+}
+.ach.in::before { animation: achSweep 1.05s var(--ease-lux) 0.45s; }
+@keyframes achSweep { 0% { opacity: 0; left: -65%; } 28% { opacity: 1; } 100% { opacity: 0; left: 135%; } }
+
+/* ---------- Button sheen sweep on hover ---------- */
+.btn-glow { position: relative; overflow: hidden; }
+.btn-glow::after {
+  content: ""; position: absolute; top: 0; left: -80%; width: 55%; height: 100%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+}
+.btn-glow:hover::after, .btn-glow:focus-visible::after { animation: btnSheen 0.9s var(--ease-lux); }
+@keyframes btnSheen { from { left: -80%; } to { left: 135%; } }
+
+/* ---------- Expedition trail: a climbing rope that fills with scroll ---------- */
+#trail {
+  position: fixed; top: 0; left: max(0.5rem, env(safe-area-inset-left)); z-index: 55;
+  width: 4px; height: 100svh; pointer-events: none;
+  opacity: 0; transition: opacity 0.8s var(--ease-lux);
+}
+#trail.show { opacity: 1; }
+#trail .trail-track {
+  position: absolute; left: 1px; top: 8vh; bottom: 8vh; width: 2px; border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+}
+#trail .trail-fill {
+  position: absolute; left: 0; top: 8vh; width: 4px; height: 0; border-radius: 4px;
+  background: linear-gradient(180deg, var(--rose), var(--dawn) 55%, var(--glacier));
+  box-shadow: 0 0 12px rgba(125,216,200,0.55);
+}
+#trail .trail-tip {
+  position: absolute; left: 2px; top: 8vh; width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--snow);
+  box-shadow: 0 0 0 3px rgba(7,11,20,0.85), 0 0 14px var(--glacier);
+}
+@media (max-width: 430px) { #trail { display: none; } }
+
+/* ---------- God-rays over the sunrise scene ---------- */
+#god-rays {
+  position: absolute; left: 50%; bottom: 6%; width: 150%; height: 92%; z-index: 3;
+  transform: translateX(-50%); pointer-events: none; mix-blend-mode: screen; filter: blur(7px);
+  background: conic-gradient(from 176deg at 50% 100%,
+    transparent 0deg, rgba(255,225,179,0.055) 7deg, transparent 15deg,
+    transparent 24deg, rgba(255,225,179,0.045) 31deg, transparent 39deg,
+    transparent 321deg, rgba(255,225,179,0.045) 329deg, transparent 337deg,
+    transparent 345deg, rgba(255,225,179,0.05) 353deg, transparent 360deg);
+  animation: rays 20s ease-in-out infinite alternate; opacity: 0.75;
+}
+@keyframes rays { from { transform: translateX(-50%) rotate(-4deg); } to { transform: translateX(-50%) rotate(4deg); } }
+
+/* ---------- Shooting star (spawned by JS) ---------- */
+.shooting-star {
+  position: absolute; z-index: 2; width: 2px; height: 2px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 7px 1px rgba(255,255,255,0.85); pointer-events: none;
+}
+.shooting-star::after {
+  content: ""; position: absolute; right: 1px; top: 50%; width: 84px; height: 1.4px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.75), transparent);
+}
+
 /* ---------- Accessibility ---------- */
 :focus-visible { outline: 2px solid var(--glacier); outline-offset: 3px; border-radius: 6px; }
 
@@ -542,6 +664,13 @@ body::after {
 </style>
 </head>
 <body>
+
+<!-- ============ EXPEDITION TRAIL (scroll-progress rope) ============ -->
+<div id="trail" aria-hidden="true">
+  <div class="trail-track"></div>
+  <div class="trail-fill"></div>
+  <div class="trail-tip"></div>
+</div>
 
 <!-- ============ ALTIMETER (signature element) ============ -->
 <div id="altimeter" aria-hidden="true">
@@ -729,7 +858,7 @@ body::after {
       <div class="pack-item" style="--x:140px;  --y:-120px; --r:5deg;  --tint:#ffd166;"><span class="pi-emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16"/><path d="M4 9.2v5.6M6.6 8v8"/><path d="M20 9.2v5.6M17.4 8v8"/></svg></span><div class="pi-label">Gym Buff</div></div>
       <div class="pack-item" style="--x:-100px; --y:-54px;  --r:-4deg; --tint:#e58fa2;"><span class="pi-emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4c.5 2-.6 3.3-1.7 4.3-1.1 1-2.1 2.3-2.1 4.1a4.6 4.6 0 0 0 9.2 0c0-1.8-.8-3.2-1.9-4.4-.3.9-.8 1.4-1.5 1.6C14 8 13.3 5.9 13 4Z"/></svg></span><div class="pi-label">Grit</div></div>
       <div class="pack-item" style="--x:100px;  --y:-54px;  --r:4deg;  --tint:#7dd8c8;"><span class="pi-emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3.5v5L5.6 16.8a2 2 0 0 0 1.8 3h9.2a2 2 0 0 0 1.8-3L14.5 8.5v-5"/><path d="M8.5 3.5h7M8.2 14h7.6"/></svg></span><div class="pi-label">Luck</div></div>
-      <div class="pack-item" style="--x:0px;    --y:-128px; --r:-2deg; --tint:#8ab8ff;"><span class="pi-emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8l-4 3.5V15.5H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2Z"/><path d="M8 10v3M11.5 8.5v6M15 10v3"/></svg></span><div class="pi-label">Voice Notes</div></div>
+      <div class="pack-item" style="--x:0px;    --y:-128px; --r:-2deg; --tint:#e58fa2;"><span class="pi-emoji"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.4V4.6l10-2v12.8"/><ellipse cx="6.1" cy="17.4" rx="3" ry="2.6"/><ellipse cx="16.1" cy="15.4" rx="3" ry="2.6"/></svg></span><div class="pi-label">Taylor Swift</div></div>
 
       <!-- SVG backpack -->
       <button id="backpack" aria-label="Tap to open the backpack" aria-expanded="false">
@@ -779,6 +908,7 @@ body::after {
     <div id="scene-sky"></div>
     <div class="stars" id="scene-stars"></div>
     <div id="sun"></div>
+    <div id="god-rays"></div>
 
     <!-- birds -->
     <div class="bird" style="top:24%; animation-duration:26s;">
@@ -802,7 +932,6 @@ body::after {
       <path fill="#0a0f1e" d="M0,500 L0,444 L300,352 L560,452 L840,330 L1120,462 L1440,372 L1440,500 Z"/>
     </svg>
   </div>
-  <p class="scene-caption reveal">Approximate simulation of the view. Reality reportedly rendered at a much higher resolution.</p>
 </section>
 
 <div class="divider" aria-hidden="true">SYSTEM UPDATE</div>
@@ -874,7 +1003,6 @@ body::after {
 
     <p class="final-welcome reveal d5">Welcome back, Nirvita.</p>
     <p class="reveal d5" style="color:var(--mist); font-size:0.95rem; margin-top:0.7rem;">Explorer status: officially unlocked.</p>
-    <p class="final-ps reveal d6">built at sea level · with zero borrowed gear · easter eggs: 4 hidden</p>
   </div>
 </section>
 
@@ -934,6 +1062,11 @@ body::after {
   /* ---------- Hero parallax (scroll + subtle tilt) ---------- */
   const parallaxLayers = $$("#hero-mountains svg");
   const hero = $("#hero");
+  const heroContent = hero.querySelector(".hero-content");
+  const heroMountains = $("#hero-mountains");
+  const heroStars = $("#stars");
+  let pointerX = 0, pointerY = 0; // normalized -1..1, eased toward target
+  let pointerTX = 0, pointerTY = 0;
   function onScrollParallax() {
     if (reduceMotion) return;
     const y = window.scrollY;
@@ -942,24 +1075,91 @@ body::after {
       const d = parseFloat(l.dataset.depth || 0.2);
       l.style.transform = `translateY(${y * d * 0.35}px)`;
     });
-    hero.querySelector(".hero-content").style.transform = `translateY(${y * 0.18}px)`;
-    hero.querySelector(".hero-content").style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.7));
+    heroContent.style.transform = `translate(${pointerX * 10}px, ${y * 0.18 + pointerY * 6}px)`;
+    heroContent.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.7));
+    heroMountains.style.transform = `translate(${pointerX * -22}px, ${pointerY * -8}px)`;
+    heroStars.style.transform = `translate(${pointerX * -12}px, ${pointerY * -6}px)`;
   }
+
+  /* ---------- Hero pointer parallax (desktop; eased, self-halting) ---------- */
+  if (!reduceMotion && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    let pointerRAF = null;
+    function easePointer() {
+      pointerX += (pointerTX - pointerX) * 0.06;
+      pointerY += (pointerTY - pointerY) * 0.06;
+      if (window.scrollY < window.innerHeight * 1.2) onScrollParallax();
+      // Keep animating only while there's motion left to resolve, then stop.
+      if (Math.abs(pointerTX - pointerX) > 0.0015 || Math.abs(pointerTY - pointerY) > 0.0015) {
+        pointerRAF = requestAnimationFrame(easePointer);
+      } else { pointerRAF = null; }
+    }
+    window.addEventListener("pointermove", (e) => {
+      pointerTX = (e.clientX / window.innerWidth - 0.5) * 2;
+      pointerTY = (e.clientY / window.innerHeight - 0.5) * 2;
+      if (pointerRAF === null) pointerRAF = requestAnimationFrame(easePointer);
+    }, { passive: true });
+  }
+
+  /* ---------- Cursor spotlight on glass cards ---------- */
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.addEventListener("pointermove", (e) => {
+      const card = e.target.closest(".card");
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      card.style.setProperty("--my", (e.clientY - r.top) + "px");
+    }, { passive: true });
+  }
+
+  /* ---------- Shooting stars across the hero sky ---------- */
+  (function shootingStars() {
+    if (reduceMotion) return;
+    function launch() {
+      // Only while the hero is on screen
+      if (window.scrollY < window.innerHeight * 0.85) {
+        const s = document.createElement("div");
+        s.className = "shooting-star";
+        const startX = 20 + Math.random() * 60;      // vw
+        const startY = 4 + Math.random() * 34;        // vh
+        s.style.left = startX + "vw";
+        s.style.top = startY + "vh";
+        hero.appendChild(s);
+        const dist = 220 + Math.random() * 180;
+        s.animate([
+          { transform: "translate(0,0) rotate(18deg)", opacity: 0 },
+          { opacity: 1, offset: 0.15 },
+          { transform: `translate(${dist}px, ${dist * 0.32}px) rotate(18deg)`, opacity: 0 }
+        ], { duration: 900 + Math.random() * 500, easing: "cubic-bezier(0.4,0,0.2,1)" })
+          .onfinish = () => s.remove();
+      }
+      setTimeout(launch, 4200 + Math.random() * 6000);
+    }
+    setTimeout(launch, 2600);
+  })();
 
   /* ---------- Altimeter: climbs with scroll progress ---------- */
   const altimeter = $("#altimeter");
   const altValue = $("#alt-value");
+  const trail = $("#trail");
+  const trailFill = $("#trail .trail-fill");
+  const trailTip = $("#trail .trail-tip");
   const ALT_START = 2050;   // Manali
   const ALT_PEAK = 4270;    // Hampta Pass
   function onScrollAltimeter() {
     const doc = document.documentElement;
     const max = doc.scrollHeight - window.innerHeight;
     const p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
-    if (window.scrollY > 80) altimeter.classList.add("show");
-    else altimeter.classList.remove("show");
+    const climbing = window.scrollY > 80;
+    altimeter.classList.toggle("show", climbing);
+    trail.classList.toggle("show", climbing);
     const alt = Math.round(ALT_START + (ALT_PEAK - ALT_START) * p);
     altValue.textContent = alt.toLocaleString("en-IN") + "m";
     altimeter.classList.toggle("summit", p > 0.96);
+    // Drive the climbing rope (track spans 8vh..92vh of the viewport)
+    const usable = window.innerHeight * 0.84;
+    const offset = window.innerHeight * 0.08;
+    trailFill.style.height = (usable * p) + "px";
+    trailTip.style.top = (offset + usable * p) + "px";
   }
 
   let ticking = false;
